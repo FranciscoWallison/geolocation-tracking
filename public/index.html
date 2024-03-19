@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPSD Client</title>
+</head>
+
+<body>
+  <button id="startButton">Iniciar</button>
+  <div id="output"></div>
+
+  <script>
+    document.getElementById('startButton').addEventListener('click', () => {
+      if ('WebSocket' in window) {
+        const socket = new WebSocket('ws://localhost:3000/');
+
+        socket.onopen = function (event) {
+          console.log('Conexão WebSocket aberta');
+        };
+
+        socket.onerror = function (error) {
+          console.error('Erro WebSocket:', error);
+        };
+
+        socket.onclose = function (event) {
+          console.log('Conexão WebSocket fechada');
+        };
+
+        socket.onmessage = function (event) {
+          console.log('Mensagem recebida:', event.data);
+          const data = JSON.parse(event.data);
+          document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+        };
+
+        socket.onclose = function () {
+          console.log('Conexão WebSocket fechada');
+        };
+      } else {
+        console.error('WebSockets não são suportados nesse navegador.');
+      }
+    });
+  </script>
+</body>
+
+</html>
