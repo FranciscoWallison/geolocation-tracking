@@ -3,40 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geolocalização</title>
+    <title>Geolocalização com Leaflet</title>
+    <!-- Inclua a biblioteca Leaflet via CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
 </head>
 <body>
-    <h1>Geolocalização do Navegador</h1>
-    <p id="location">Carregando localização...</p>
+    <h1>Geolocalização com Leaflet</h1>
+    <!-- Crie um elemento <div> para o mapa -->
+    <div id="map" style="height: 400px;"></div>
 
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D0T0tV8mqi1mwllYDSj+bFi56V4L4Z6G5ux6+8hGGAc0RwbhLd6zO0A==" crossorigin=""></script>
     <script>
         function getLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(showPosition, showError);
+                navigator.geolocation.watchPosition(showMap, showError);
             } else {
-                document.getElementById("location").innerHTML = "Geolocalização não é suportada por este navegador.";
+                document.getElementById("map").innerHTML = "Geolocalização não é suportada por este navegador.";
             }
         }
 
-        function showPosition(position) {
+        function showMap(position) {
             var latitude = position.coords.latitude;
             var longitude = position.coords.longitude;
-            document.getElementById("location").innerHTML = "Latitude: " + latitude + "<br>Longitude: " + longitude;
+
+            // Crie um mapa Leaflet e adicione um marcador com a posição atual
+            var map = L.map('map').setView([latitude, longitude], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            L.marker([latitude, longitude]).addTo(map)
+                .bindPopup('Você está aqui!')
+                .openPopup();
         }
 
         function showError(error) {
             switch(error.code) {
                 case error.PERMISSION_DENIED:
-                    document.getElementById("location").innerHTML = "Usuário rejeitou a solicitação de geolocalização.";
+                    document.getElementById("map").innerHTML = "Usuário rejeitou a solicitação de geolocalização.";
                     break;
                 case error.POSITION_UNAVAILABLE:
-                    document.getElementById("location").innerHTML = "Informações de localização indisponíveis.";
+                    document.getElementById("map").innerHTML = "Informações de localização indisponíveis.";
                     break;
                 case error.TIMEOUT:
-                    document.getElementById("location").innerHTML = "O pedido para obter a localização do usuário expirou.";
+                    document.getElementById("map").innerHTML = "O pedido para obter a localização do usuário expirou.";
                     break;
                 case error.UNKNOWN_ERROR:
-                    document.getElementById("location").innerHTML = "Um erro desconhecido ocorreu.";
+                    document.getElementById("map").innerHTML = "Um erro desconhecido ocorreu.";
                     break;
             }
         }
