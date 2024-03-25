@@ -1,47 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GPSD Client</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geolocalização</title>
 </head>
-
 <body>
-  <button id="startButton">Iniciar</button>
-  <div id="output"></div>
+    <h1>Geolocalização do Navegador</h1>
+    <p id="location">Carregando localização...</p>
 
-  <script>
-    document.getElementById('startButton').addEventListener('click', () => {
-      if ('WebSocket' in window) {
-        const socket = new WebSocket('ws://localhost:3000/');
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(showPosition, showError);
+            } else {
+                document.getElementById("location").innerHTML = "Geolocalização não é suportada por este navegador.";
+            }
+        }
 
-        socket.onopen = function (event) {
-          console.log('Conexão WebSocket aberta');
-        };
+        function showPosition(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            document.getElementById("location").innerHTML = "Latitude: " + latitude + "<br>Longitude: " + longitude;
+        }
 
-        socket.onerror = function (error) {
-          console.error('Erro WebSocket:', error);
-        };
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    document.getElementById("location").innerHTML = "Usuário rejeitou a solicitação de geolocalização.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    document.getElementById("location").innerHTML = "Informações de localização indisponíveis.";
+                    break;
+                case error.TIMEOUT:
+                    document.getElementById("location").innerHTML = "O pedido para obter a localização do usuário expirou.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    document.getElementById("location").innerHTML = "Um erro desconhecido ocorreu.";
+                    break;
+            }
+        }
 
-        socket.onclose = function (event) {
-          console.log('Conexão WebSocket fechada');
-        };
-
-        socket.onmessage = function (event) {
-          console.log('Mensagem recebida:', event.data);
-          const data = JSON.parse(event.data);
-          document.getElementById('output').innerText = JSON.stringify(data, null, 2);
-        };
-
-        socket.onclose = function () {
-          console.log('Conexão WebSocket fechada');
-        };
-      } else {
-        console.error('WebSockets não são suportados nesse navegador.');
-      }
-    });
-  </script>
+        // Chame a função para obter a localização quando a página for carregada
+        window.onload = getLocation;
+    </script>
 </body>
-
 </html>
