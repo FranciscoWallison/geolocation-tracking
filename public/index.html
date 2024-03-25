@@ -56,6 +56,7 @@
                 markerLayer.getSource().addFeature(marker); // Adiciona o novo marcador
 
                 map.getView().setCenter(ol.proj.fromLonLat([longitude, latitude])); // Centraliza o mapa na nova posição
+                document.getElementById("location").innerHTML = "Latitude: " + latitude + "<br>Longitude: " + longitude;
             }
 
             function showError(error) {
