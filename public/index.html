@@ -27,7 +27,7 @@
                     })
                 ],
                 view: new ol.View({
-                    center: ol.proj.fromLonLat([-38.53, -12.97]), // Define o centro do mapa (Salvador, Bahia)
+                    center: ol.proj.fromLonLat([-3.8200209, -38.5235366]), // Define o centro do mapa (Salvador, Bahia)
                     zoom: 10 // Define o nível de zoom inicial
                 })
             });
@@ -57,6 +57,7 @@
                 markerLayer.getSource().addFeature(marker); // Adiciona o novo marcador
 
                 map.getView().setCenter(ol.proj.fromLonLat([longitude, latitude])); // Centraliza o mapa na nova posição
+                map.getView().setZoom(20); // Define um zoom mais próximo (valor ajustável)
             }
 
             function showError(error) {
