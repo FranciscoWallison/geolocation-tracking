@@ -11,33 +11,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.1.0/ol.css">
 
 </head>
-
 <body>
     <h1>Geolocalização do Navegador</h1>
-    <p id="location">Carregando localização...</p>
     <!-- Adicione um elemento div para o mapa -->
     <div id="map" style="width: 100%; height: 400px;"></div>
 
-
-
-
     <script>
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(showPosition, showError);
-            } else {
-                document.getElementById("location").innerHTML = "Geolocalização não é suportada por este navegador.";
-            }
-        }
-
-        function showPosition(position) {
-            var latitude = position.coords.latitude;
-            var longitude = position.coords.longitude;
-
-            // Atualiza a exibição da localização no HTML
-            document.getElementById("location").innerHTML = "Latitude: " + latitude + "<br>Longitude: " + longitude;
-
-            // Inicializa o mapa OpenLayers
+        function initMap() {
             var map = new ol.Map({
                 target: 'map', // ID do elemento div que conterá o mapa
                 layers: [
@@ -46,56 +26,65 @@
                     })
                 ],
                 view: new ol.View({
-                    center: ol.proj.fromLonLat([longitude, latitude]), // Define o centro do mapa com base na localização do usuário
+                    center: ol.proj.fromLonLat([-38.53, -12.97]), // Define o centro do mapa (Salvador, Bahia)
                     zoom: 10 // Define o nível de zoom inicial
                 })
             });
 
-            // Adiciona um marcador na posição do usuário
-            var marker = new ol.Feature({
-                geometry: new ol.geom.Point(ol.proj.fromLonLat([longitude, latitude]))
-            });
-
-            var markerStyle = new ol.style.Style({
-                image: new ol.style.Icon({
-                    src: 'https://openlayers.org/en/latest/examples/data/icon.png' // Ícone do marcador
+            var markerLayer = new ol.layer.Vector({
+                source: new ol.source.Vector(),
+                style: new ol.style.Style({
+                    image: new ol.style.Icon({
+                        anchor: [0.5, 1],
+                        src: 'https://openlayers.org/en/latest/examples/data/icon.png' // Ícone do marcador
+                    })
                 })
             });
 
-            marker.setStyle(markerStyle);
+            map.addLayer(markerLayer);
 
-            var vectorSource = new ol.source.Vector({
-                features: [marker]
-            });
+            function showPosition(position) {
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
 
-            var vectorLayer = new ol.layer.Vector({
-                source: vectorSource
-            });
+                // Atualiza a posição do marcador
+                var marker = new ol.Feature({
+                    geometry: new ol.geom.Point(ol.proj.fromLonLat([longitude, latitude]))
+                });
 
-            map.addLayer(vectorLayer);
-        }
+                markerLayer.getSource().clear(); // Limpa os marcadores antigos
+                markerLayer.getSource().addFeature(marker); // Adiciona o novo marcador
 
+                map.getView().setCenter(ol.proj.fromLonLat([longitude, latitude])); // Centraliza o mapa na nova posição
+            }
 
-        function showError(error) {
-            switch (error.code) {
-                case error.PERMISSION_DENIED:
-                    document.getElementById("location").innerHTML = "Usuário rejeitou a solicitação de geolocalização.";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    document.getElementById("location").innerHTML = "Informações de localização indisponíveis.";
-                    break;
-                case error.TIMEOUT:
-                    document.getElementById("location").innerHTML = "O pedido para obter a localização do usuário expirou.";
-                    break;
-                case error.UNKNOWN_ERROR:
-                    document.getElementById("location").innerHTML = "Um erro desconhecido ocorreu.";
-                    break;
+            function showError(error) {
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        alert("Usuário rejeitou a solicitação de geolocalização.");
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        alert("Informações de localização indisponíveis.");
+                        break;
+                    case error.TIMEOUT:
+                        alert("O pedido para obter a localização do usuário expirou.");
+                        break;
+                    case error.UNKNOWN_ERROR:
+                        alert("Um erro desconhecido ocorreu.");
+                        break;
+                }
+            }
+
+            // Chame a função para obter a localização quando a página for carregada
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(showPosition, showError);
+            } else {
+                alert("Geolocalização não é suportada por este navegador.");
             }
         }
 
-        // Chame a função para obter a localização quando a página for carregada
-        window.onload = getLocation;
+        // Inicialize o mapa quando a página for carregada
+        window.onload = initMap;
     </script>
 </body>
-
 </html>
