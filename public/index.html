@@ -48,6 +48,8 @@
                 var latitude = position.coords.latitude;
                 var longitude = position.coords.longitude;
 
+                document.getElementById("location").innerHTML = "Latitude: " + latitude + "<br>Longitude: " + longitude
+
                 // Atualiza a posição do marcador
                 var marker = new ol.Feature({
                     geometry: new ol.geom.Point(ol.proj.fromLonLat([longitude, latitude]))
