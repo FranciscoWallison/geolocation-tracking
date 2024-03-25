@@ -47,9 +47,7 @@
             function showPosition(position) {
                 var latitude = position.coords.latitude;
                 var longitude = position.coords.longitude;
-
                 document.getElementById("location").innerHTML = "Latitude: " + latitude + "<br>Longitude: " + longitude
-
                 // Atualiza a posição do marcador
                 var marker = new ol.Feature({
                     geometry: new ol.geom.Point(ol.proj.fromLonLat([longitude, latitude]))
@@ -59,7 +57,6 @@
                 markerLayer.getSource().addFeature(marker); // Adiciona o novo marcador
 
                 map.getView().setCenter(ol.proj.fromLonLat([longitude, latitude])); // Centraliza o mapa na nova posição
-                document.getElementById("location").innerHTML = "Latitude: " + latitude + "<br>Longitude: " + longitude;
             }
 
             function showError(error) {
@@ -81,7 +78,8 @@
 
             // Chame a função para obter a localização quando a página for carregada
             if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(showPosition, showError);
+                // Defina o intervalo máximo de idade da posição como 0 milissegundos para obter a localização mais recente
+                navigator.geolocation.watchPosition(showPosition, showError, { maximumAge: 0 });
             } else {
                 alert("Geolocalização não é suportada por este navegador.");
             }
