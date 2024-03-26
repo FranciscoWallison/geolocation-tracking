@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json"> <!-- Link para o manifesto -->
     <title>Geolocalização</title>
 
     <!-- Inclua a biblioteca OpenLayers -->
@@ -11,6 +12,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.1.0/ol.css">
 
 </head>
+
 <body>
     <h1>Geolocalização do Navegador teste 5</h1>
     <p id="location">Carregando localização...</p>
@@ -18,6 +20,13 @@
     <div id="map" style="width: 100%; height: 400px;"></div>
 
     <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => console.log('Service Worker registrado com sucesso:', registration))
+                    .catch(error => console.log('Falha ao registrar o Service Worker:', error));
+            });
+        }
         function initMap() {
             var map = new ol.Map({
                 target: 'map', // ID do elemento div que conterá o mapa
@@ -47,7 +56,7 @@
             function showPosition(position) {
                 var latitude = position.coords.latitude;
                 var longitude = position.coords.longitude;
-                // document.getElementById("location").innerHTML = "Latitude: " + latitude + "<br>Longitude: " + longitude
+                document.getElementById("location").innerHTML = "Latitude: " + latitude + "<br>Longitude: " + longitude
                 // Atualiza a posição do marcador
                 var marker = new ol.Feature({
                     geometry: new ol.geom.Point(ol.proj.fromLonLat([longitude, latitude]))
@@ -61,7 +70,7 @@
             }
 
             function showError(error) {
-                switch(error.code) {
+                switch (error.code) {
                     case error.PERMISSION_DENIED:
                         alert("Usuário rejeitou a solicitação de geolocalização.");
                         break;
@@ -80,7 +89,7 @@
             // Chame a função para obter a localização quando a página for carregada
             if (navigator.geolocation) {
                 // Defina o intervalo máximo de idade da posição como 0 milissegundos para obter a localização mais recente
-                navigator.geolocation.watchPosition(showPosition, showError, { maximumAge: 0 });
+                navigator.geolocation.watchPosition(showPosition, showError, {maximumAge: 0});
             } else {
                 alert("Geolocalização não é suportada por este navegador.");
             }
@@ -89,5 +98,40 @@
         // Inicialize o mapa quando a página for carregada
         window.onload = initMap;
     </script>
+    <!-- Código do Banner de Instalação -->
+    <script>
+        window.addEventListener('beforeinstallprompt', event => {
+            // Mostra o banner de instalação
+            event.preventDefault();
+            const banner = document.createElement('div');
+            banner.innerHTML = `
+        <div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #f1f1f1; padding: 10px; text-align: center;">
+          <p>Instalar Geolocalização App</p>
+          <button onclick="installApp()">Instalar</button>
+        </div>
+      `;
+            document.body.appendChild(banner);
+
+            // Salva o evento para poder ser usado posteriormente
+            window.deferredInstallPrompt = event;
+        });
+
+        function installApp() {
+            // Dispara o evento de instalação
+            const {deferredInstallPrompt} = window;
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                deferredInstallPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('O usuário aceitou a instalação');
+                    } else {
+                        console.log('O usuário rejeitou a instalação');
+                    }
+                    window.deferredInstallPrompt = null;
+                });
+            }
+        }
+    </script>
 </body>
+
 </html>
