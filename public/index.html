@@ -10,7 +10,6 @@
     <!-- Inclua a biblioteca OpenLayers -->
     <script src="https://cdn.jsdelivr.net/npm/ol@v9.1.0/dist/ol.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.1.0/ol.css">
-
 </head>
 
 <body>
@@ -24,9 +23,10 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(registration => console.log('Service Worker registrado com sucesso:', registration))
-                    .catch(error => console.log('Falha ao registrar o Service Worker:', error));
+                    .catch(error => console.error('Falha ao registrar o Service Worker:', error));
             });
         }
+
         function initMap() {
             var map = new ol.Map({
                 target: 'map', // ID do elemento div que conterá o mapa
@@ -36,7 +36,7 @@
                     })
                 ],
                 view: new ol.View({
-                    center: ol.proj.fromLonLat([-3.8200209, -38.5235366]), // Define o centro do mapa (Salvador, Bahia)
+                    center: ol.proj.fromLonLat([-3.8200209, -38.5235366]), // Define o centro do mapa
                     zoom: 10 // Define o nível de zoom inicial
                 })
             });
@@ -53,21 +53,18 @@
 
             map.addLayer(markerLayer);
 
+            var marker = new ol.Feature();
+            markerLayer.getSource().addFeature(marker);
+
             function showPosition(position) {
                 var latitude = position.coords.latitude;
                 var longitude = position.coords.longitude;
-                document.getElementById("location").innerHTML = `${document.getElementById("location").innerHTML}: <wbr>
-                ` + "Latitude: " + latitude + "<br>Longitude: " + longitude
-                console.log(" teste: ", latitude, longitude)
-                // Atualiza a posição do marcador
-                var marker = new ol.Feature({
-                    geometry: new ol.geom.Point(ol.proj.fromLonLat([longitude, latitude]))
-                });
+                document.getElementById("location").innerHTML = `Latitude: ${latitude}<br>Longitude: ${longitude}`;
 
-                markerLayer.getSource().clear(); // Limpa os marcadores antigos
-                markerLayer.getSource().addFeature(marker); // Adiciona o novo marcador
+                var coordinates = ol.proj.fromLonLat([longitude, latitude]);
+                marker.setGeometry(new ol.geom.Point(coordinates));
 
-                map.getView().setCenter(ol.proj.fromLonLat([longitude, latitude])); // Centraliza o mapa na nova posição
+                map.getView().setCenter(coordinates); // Centraliza o mapa na nova posição
                 map.getView().setZoom(20); // Define um zoom mais próximo (valor ajustável)
             }
 
@@ -91,7 +88,7 @@
             // Chame a função para obter a localização quando a página for carregada
             if (navigator.geolocation) {
                 // Defina o intervalo máximo de idade da posição como 0 milissegundos para obter a localização mais recente
-                navigator.geolocation.watchPosition(showPosition, showError, {maximumAge: 0});
+                navigator.geolocation.watchPosition(showPosition, showError, { maximumAge: 0 });
             } else {
                 alert("Geolocalização não é suportada por este navegador.");
             }
@@ -107,11 +104,11 @@
             event.preventDefault();
             const banner = document.createElement('div');
             banner.innerHTML = `
-        <div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #f1f1f1; padding: 10px; text-align: center;">
-          <p>Instalar Geolocalização App</p>
-          <button onclick="installApp()">Instalar</button>
-        </div>
-      `;
+                <div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #f1f1f1; padding: 10px; text-align: center;">
+                    <p>Instalar Geolocalização App</p>
+                    <button onclick="installApp()">Instalar</button>
+                </div>
+            `;
             document.body.appendChild(banner);
 
             // Salva o evento para poder ser usado posteriormente
@@ -120,7 +117,7 @@
 
         function installApp() {
             // Dispara o evento de instalação
-            const {deferredInstallPrompt} = window;
+            const { deferredInstallPrompt } = window;
             if (deferredInstallPrompt) {
                 deferredInstallPrompt.prompt();
                 deferredInstallPrompt.userChoice.then(choiceResult => {
