@@ -10,7 +10,7 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
-import { Style, Icon } from 'ol/style';
+import { Style, Icon, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
 import Feature from 'ol/Feature';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
@@ -18,15 +18,35 @@ import styles from '../styles/Home.module.css';
 const Home = () => {
   const mapElement = useRef();
   const [coordinates, setCoordinates] = useState({ lat: 0, lon: 0 });
+  const [isInDangerZone, setIsInDangerZone] = useState(false);
 
   useEffect(() => {
     let map;
     let view;
     let userLocationLayer;
     let userLocationSource;
+    let dangerousLocationSource;
+    let dangerousLocationLayer;
+
+    const dangerousLocations = [
+      { lat: -3.819914, lon: -38.523600 },
+      { lat: -3.819921, lon: -38.523479 },
+      { lat: -3.820022, lon: -38.523541 },
+      { lat: -3.819847, lon: -38.5235827 },
+      { lat: -3.819874, lon: -38.5234946 },
+      { lat: -3.8199004, lon: -38.523406 },
+      { lat: -3.8199251, lon: -38.5233156 },
+    ];
+
+    const isInsideDangerZone = (lat, lon) => {
+      return dangerousLocations.some((location) => {
+        const latDiff = Math.abs(location.lat - lat);
+        const lonDiff = Math.abs(location.lon - lon);
+        return latDiff < 0.0001 && lonDiff < 0.0001;
+      });
+    };
 
     const initMap = () => {
-      // Create map
       view = new View({
         center: fromLonLat([0, 0]),
         zoom: 10,
@@ -42,7 +62,6 @@ const Home = () => {
         view: view,
       });
 
-      // Create user location layer
       userLocationSource = new VectorSource();
       userLocationLayer = new VectorLayer({
         source: userLocationSource,
@@ -56,12 +75,34 @@ const Home = () => {
 
       map.addLayer(userLocationLayer);
 
-      // Watch user location
+      dangerousLocationSource = new VectorSource();
+      dangerousLocationLayer = new VectorLayer({
+        source: dangerousLocationSource,
+        style: new Style({
+          image: new CircleStyle({
+            radius: 10,
+            fill: new Fill({ color: 'rgba(255, 0, 0, 0.5)' }),
+            stroke: new Stroke({ color: 'red', width: 2 }),
+          }),
+        }),
+      });
+
+      map.addLayer(dangerousLocationLayer);
+
+      dangerousLocations.forEach(location => {
+        const coordinates = fromLonLat([location.lon, location.lat]);
+        const feature = new Feature({
+          geometry: new Point(coordinates),
+        });
+        dangerousLocationSource.addFeature(feature);
+      });
+
       if ('geolocation' in navigator) {
         navigator.geolocation.watchPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
             setCoordinates({ lat: latitude, lon: longitude });
+
             const coords = fromLonLat([longitude, latitude]);
             view.setCenter(coords);
             view.setZoom(20);
@@ -72,6 +113,15 @@ const Home = () => {
 
             userLocationSource.clear(true); // Clear previous location
             userLocationSource.addFeature(userLocationFeature);
+
+            // Check if the user is inside a danger zone
+            if (isInsideDangerZone(latitude, longitude)) {
+              setIsInDangerZone(true);
+              map.getViewport().style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+            } else {
+              setIsInDangerZone(false);
+              map.getViewport().style.backgroundColor = 'transparent';
+            }
           },
           (error) => {
             console.error('Error watching position:', error);
@@ -103,6 +153,7 @@ const Home = () => {
       <p className={styles.coordinates}>
         Latitude: {coordinates.lat.toFixed(6)}, Longitude: {coordinates.lon.toFixed(6)}
       </p>
+      {isInDangerZone && <p className={styles.danger}>Você está em uma área perigosa!</p>}
       <div
         ref={mapElement}
         className={styles.mapContainer}
