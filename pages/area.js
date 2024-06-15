@@ -75,6 +75,24 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [dangerousLocations, setDangerousLocations] = useState([]);
 
+  if ("Notification" in window && navigator.permissions) {
+    navigator.permissions
+      .query({ name: "notifications" })
+      .then((permissionStatus) => {
+        if (permissionStatus.state === "granted") {
+          // Permissão concedida, pode exibir notificações
+          showNotification("Esta é uma notificação de teste!");
+        } else if (permissionStatus.state === "prompt") {
+          // Permissão ainda não foi decidida pelo usuário, pode solicitar
+          Notification.requestPermission().then((permission) => {
+            if (permission === "granted") {
+              showNotification("Esta é uma notificação de teste!");
+            }
+          });
+        }
+      });
+  }
+
   useEffect(() => {
     let map;
     let view;
@@ -126,13 +144,16 @@ const Home = () => {
 
       map.addLayer(dangerousLocationLayer);
 
-      dangerousLocations.forEach((location) => {
-        const coordinates = fromLonLat([location.lon, location.lat]);
-        const feature = new Feature({
-          geometry: new Point(coordinates),
+      // Add all dangerous locations to the source
+      Object.values(additionalLocations)
+        .flat()
+        .forEach((location) => {
+          const coordinates = fromLonLat([location.lon, location.lat]);
+          const feature = new Feature({
+            geometry: new Point(coordinates),
+          });
+          dangerousLocationSource.addFeature(feature);
         });
-        dangerousLocationSource.addFeature(feature);
-      });
 
       if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition(
@@ -176,77 +197,81 @@ const Home = () => {
     };
 
     const isInsideDangerZone = (lat, lon) => {
-      return dangerousLocations.some((location) => {
-        const latDiff = Math.abs(location.lat - lat);
-        const lonDiff = Math.abs(location.lon - lon);
-        return latDiff < 0.0001 && lonDiff < 0.0001;
-      });
+      return Object.values(additionalLocations)
+        .flat()
+        .some((location) => {
+          const latDiff = Math.abs(location.lat - lat);
+          const lonDiff = Math.abs(location.lon - lon);
+          return latDiff < 0.0001 && lonDiff < 0.0001;
+        });
     };
-
-    showNotification("teste");
 
     initMap();
 
     return () => {
       if (map) {
+        map.set;
         map.setTarget(null);
       }
     };
-  }, [dangerousLocations]);
+  }, []);
 
   const showNotification = (message) => {
-    if ("Notification" in window) {
-      if (Notification.permission === "granted") {
-        new Notification(message);
-      } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then(function (permission) {
-          if (permission === "granted") {
-            new Notification(message);
-          }
-        });
-      }
+    if (Notification.permission === "granted") {
+      new Notification(message);
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          new Notification(message);
+        }
+      });
     }
-  };
-
-  const addLocation = (locationKey) => {
-    setDangerousLocations((prevLocations) => [
-      ...prevLocations,
-      ...additionalLocations[locationKey],
-    ]);
   };
 
   const handleTestNotification = () => {
     showNotification("Esta é uma notificação de teste!");
   };
 
+  const addLocation = (locationKey) => {
+    // Add the selected location's points to the dangerous locations
+    setDangerousLocations((prevLocations) => [
+      ...prevLocations,
+      ...additionalLocations[locationKey],
+    ]);
+  };
+
   return (
     <div className={styles.container}>
       <Head>
         <title>Minha Localização em Tempo Real</title>
-        <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>Minha Localização em Tempo Real</h1>
-
-        <div className={styles.mapContainer}>
-          <div ref={mapElement} className={styles.map}></div>
-        </div>
-
-        <div className={styles.controls}>
+      <h1>Minha Localização em Tempo Real</h1>
+      <p className={styles.coordinates}>
+        Latitude: {coordinates.lat.toFixed(6)}, Longitude:{" "}
+        {coordinates.lon.toFixed(6)}
+      </p>
+      {isInDangerZone && (
+        <p className={styles.danger}>Você está em uma área perigosa!</p>
+      )}
+      {error && <p className={styles.error}>{error}</p>}
+      <div className={styles.buttonContainer}>
+        {/* {Object.keys(additionalLocations).map((key) => (
           <button
-            onClick={handleTestNotification}
-            className={styles.notificationButton}
+            key={key}
+            onClick={() => addLocation(key)}
+            className={styles.button}
           >
-            Testar Notificação
+            Adicionar {key}
           </button>
-          <div className={styles.error}>{error && <p>{error}</p>}</div>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <p>Desenvolvido por você!</p>
-      </footer>
+        ))} */}
+        <button
+          onClick={handleTestNotification}
+          className={styles.notificationButton}
+        >
+          Testar Notificação
+        </button>
+      </div>
+      <div ref={mapElement} className={styles.mapContainer}></div>
     </div>
   );
 };
