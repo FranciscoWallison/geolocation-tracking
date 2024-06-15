@@ -75,7 +75,6 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [dangerousLocations, setDangerousLocations] = useState([]);
 
-
   useEffect(() => {
     let map;
     let view;
@@ -189,18 +188,6 @@ const Home = () => {
         });
     };
 
-    const showNotification = (message) => {
-      if (Notification.permission === "granted") {
-        new Notification(message);
-      } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then((permission) => {
-          if (permission === "granted") {
-            new Notification(message);
-          }
-        });
-      }
-    };
-
     initMap();
 
     return () => {
@@ -210,6 +197,22 @@ const Home = () => {
       }
     };
   }, []);
+
+  const showNotification = (message) => {
+    if (Notification.permission === "granted") {
+      new Notification(message);
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          new Notification(message);
+        }
+      });
+    }
+  };
+
+  const handleTestNotification = () => {
+    showNotification("Esta é uma notificação de teste!");
+  };
 
   const addLocation = (locationKey) => {
     // Add the selected location's points to the dangerous locations
@@ -234,7 +237,7 @@ const Home = () => {
       )}
       {error && <p className={styles.error}>{error}</p>}
       <div className={styles.buttonContainer}>
-        {Object.keys(additionalLocations).map((key) => (
+        {/* {Object.keys(additionalLocations).map((key) => (
           <button
             key={key}
             onClick={() => addLocation(key)}
@@ -242,7 +245,13 @@ const Home = () => {
           >
             Adicionar {key}
           </button>
-        ))}
+        ))} */}
+        <button
+          onClick={handleTestNotification}
+          className={styles.notificationButton}
+        >
+          Testar Notificação
+        </button>
       </div>
       <div ref={mapElement} className={styles.mapContainer}></div>
     </div>
