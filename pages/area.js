@@ -75,22 +75,24 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [dangerousLocations, setDangerousLocations] = useState([]);
 
-  if ("Notification" in window && navigator.permissions) {
-    navigator.permissions
-      .query({ name: "notifications" })
-      .then((permissionStatus) => {
-        if (permissionStatus.state === "granted") {
-          // Permissão concedida, pode exibir notificações
-          showNotification("Esta é uma notificação de teste!");
-        } else if (permissionStatus.state === "prompt") {
-          // Permissão ainda não foi decidida pelo usuário, pode solicitar
-          Notification.requestPermission().then((permission) => {
-            if (permission === "granted") {
-              showNotification("Esta é uma notificação de teste!");
-            }
-          });
-        }
-      });
+  if (typeof window !== "undefined") {
+    if ("Notification" in window && navigator.permissions) {
+      navigator.permissions
+        .query({ name: "notifications" })
+        .then((permissionStatus) => {
+          if (permissionStatus.state === "granted") {
+            // Permissão concedida, pode exibir notificações
+            showNotification("Esta é uma notificação de teste!");
+          } else if (permissionStatus.state === "prompt") {
+            // Permissão ainda não foi decidida pelo usuário, pode solicitar
+            Notification.requestPermission().then((permission) => {
+              if (permission === "granted") {
+                showNotification("Esta é uma notificação de teste!");
+              }
+            });
+          }
+        });
+    }
   }
 
   useEffect(() => {
