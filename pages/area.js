@@ -241,7 +241,7 @@ const Home = () => {
     // Exemplo de uso
     showNotification("Nova mensagem recebida", {
       body: message,
-      icon: "/public/favicon.ico",
+      icon: "/favicon.ico",
       data: { url: "/teste" },
     });
   };
