@@ -82,16 +82,29 @@ const Home = () => {
         .then((permissionStatus) => {
           if (permissionStatus.state === "granted") {
             // Permissão concedida, pode exibir notificações
-            showNotification("Esta é uma notificação de teste!");
+            testeShowNotification("Esta é uma notificação de teste!");
           } else if (permissionStatus.state === "prompt") {
             // Permissão ainda não foi decidida pelo usuário, pode solicitar
             Notification.requestPermission().then((permission) => {
               if (permission === "granted") {
-                showNotification("Esta é uma notificação de teste!");
+                testeShowNotification("Esta é uma notificação de teste!");
               }
             });
           }
         });
+    }
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", async () => {
+        try {
+          const registration = await navigator.serviceWorker.register(
+            "/service-worker.js"
+          );
+          console.log("Service Worker registrado com sucesso:", registration);
+        } catch (error) {
+          console.error("Falha ao registrar o Service Worker:", error);
+        }
+      });
     }
   }
 
@@ -178,7 +191,7 @@ const Home = () => {
             if (isInsideDangerZone(latitude, longitude)) {
               setIsInDangerZone(true);
               map.getViewport().style.backgroundColor = "rgba(255, 0, 0, 0.2)";
-              showNotification("Você está em uma área perigosa!");
+              testeShowNotification("Você está em uma área perigosa!");
             } else {
               setIsInDangerZone(false);
               map.getViewport().style.backgroundColor = "transparent";
@@ -218,20 +231,46 @@ const Home = () => {
     };
   }, []);
 
-  const showNotification = (message) => {
-    if (Notification.permission === "granted") {
-      new Notification(message);
-    } else if (Notification.permission !== "denied") {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          new Notification(message);
-        }
-      });
-    }
+  function showNotification(title, options) {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.showNotification(title, options);
+    });
+  }
+
+  const testeShowNotification = (message) => {
+    // Exemplo de uso
+    showNotification("Nova mensagem recebida", {
+      body: message,
+      icon: "/public/favicon.ico",
+      data: { url: "/teste" },
+    });
   };
 
+  // self.addEventListener('notificationclick', event => {
+  //   event.notification.close();
+  //   const urlToOpen = event.notification.data.url;
+  //   event.waitUntil(clients.openWindow(urlToOpen));
+  // });
+
+  async function askNotificationPermission() {
+    if (Notification.permission === "default") {
+      const permission = await Notification.requestPermission();
+      return permission;
+    }
+    return Notification.permission;
+  }
+
+  askNotificationPermission().then((permission) => {
+    if (permission === "granted") {
+      console.log("Permissão para notificações concedida.");
+      // Agora você pode enviar notificações
+    } else {
+      console.warn("Permissão para notificações não foi concedida.");
+    }
+  });
+
   const handleTestNotification = () => {
-    showNotification("Esta é uma notificação de teste!");
+    testeShowNotification("Esta é uma notificação de teste!");
   };
 
   const addLocation = (locationKey) => {
