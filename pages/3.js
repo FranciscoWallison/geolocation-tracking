@@ -13,48 +13,50 @@ import Feature from "ol/Feature";
 import Head from "next/head";
 import styles from "../styles/Geolocation.module.css";
 
-const PACHECO_1 = [
-  { lat: -3.682177, lon: -38.653742 },
-  { lat: -3.682283, lon: -38.653476 },
-  { lat: -3.682351, lon: -38.653309 },
-  { lat: -3.682426, lon: -38.653097 },
-  { lat: -3.682525, lon: -38.652945 },
-  { lat: -3.682623, lon: -38.652755 },
-  { lat: -3.682691, lon: -38.652581 },
-  { lat: -3.682782, lon: -38.652429 },
-  { lat: -3.682873, lon: -38.652255 },
-  { lat: -3.682956, lon: -38.652088 },
-  { lat: -3.683017, lon: -38.651921 },
-  { lat: -3.683077, lon: -38.651761 },
-  { lat: -3.683161, lon: -38.651587 },
-  { lat: -3.683244, lon: -38.651428 },
-  { lat: -3.683373, lon: -38.651261 },
-  { lat: -3.683456, lon: -38.651132 },
-  { lat: -3.683562, lon: -38.651033 },
-  { lat: -3.683653, lon: -38.650919 },
-  { lat: -3.683744, lon: -38.650806 },
-  { lat: -3.683797, lon: -38.650639 },
-  { lat: -3.683865, lon: -38.650426 },
-  { lat: -3.683986, lon: -38.650252 },
-  { lat: -3.684039, lon: -38.650062 },
-  { lat: -3.684115, lon: -38.649895 },
-  { lat: -3.684183, lon: -38.649751 },
-  { lat: -3.684274, lon: -38.649607 },
-  { lat: -3.68438, lon: -38.649478 },
-  { lat: -3.684455, lon: -38.649326 },
-  { lat: -3.684516, lon: -38.649137 },
-  { lat: -3.684592, lon: -38.649 },
-  { lat: -3.68466, lon: -38.648856 },
-  { lat: -3.684652, lon: -38.648689 },
-  { lat: -3.684751, lon: -38.648606 },
-];
+const additionalLocations = {
+  "Pacheco - 1": [
+    { lat: -3.682177, lon: -38.653742 },
+    { lat: -3.682283, lon: -38.653476 },
+    { lat: -3.682351, lon: -38.653309 },
+    { lat: -3.682426, lon: -38.653097 },
+    { lat: -3.682525, lon: -38.652945 },
+    { lat: -3.682623, lon: -38.652755 },
+    { lat: -3.682691, lon: -38.652581 },
+    { lat: -3.682782, lon: -38.652429 },
+    { lat: -3.682873, lon: -38.652255 },
+    { lat: -3.682956, lon: -38.652088 },
+    { lat: -3.683017, lon: -38.651921 },
+    { lat: -3.683077, lon: -38.651761 },
+    { lat: -3.683161, lon: -38.651587 },
+    { lat: -3.683244, lon: -38.651428 },
+    { lat: -3.683373, lon: -38.651261 },
+    { lat: -3.683456, lon: -38.651132 },
+    { lat: -3.683562, lon: -38.651033 },
+    { lat: -3.683653, lon: -38.650919 },
+    { lat: -3.683744, lon: -38.650806 },
+    { lat: -3.683797, lon: -38.650639 },
+    { lat: -3.683865, lon: -38.650426 },
+    { lat: -3.683986, lon: -38.650252 },
+    { lat: -3.684039, lon: -38.650062 },
+    { lat: -3.684115, lon: -38.649895 },
+    { lat: -3.684183, lon: -38.649751 },
+    { lat: -3.684274, lon: -38.649607 },
+    { lat: -3.68438, lon: -38.649478 },
+    { lat: -3.684455, lon: -38.649326 },
+    { lat: -3.684516, lon: -38.649137 },
+    { lat: -3.684592, lon: -38.649 },
+    { lat: -3.68466, lon: -38.648856 },
+    { lat: -3.684652, lon: -38.648689 },
+    { lat: -3.684751, lon: -38.648606 },
+  ],
+};
 
 const Home = () => {
   const mapElement = useRef();
   const [coordinates, setCoordinates] = useState({ lat: 0, lon: 0 });
   const [isInDangerZone, setIsInDangerZone] = useState(false);
   const [error, setError] = useState(null);
-  const [lastNotificationTime, setLastNotificationTime] = useState(0);
+  const [dangerousLocations, setDangerousLocations] = useState([]);
 
   useEffect(() => {
     let map;
@@ -65,9 +67,12 @@ const Home = () => {
     let dangerousLocationLayer;
 
     const initMap = () => {
+      // lat: -3.683373, lon: -38.651261
+      const initialCenter = fromLonLat([-38.651261, -3.683373]); // Coordenadas desejadas
+
       view = new View({
-        center: fromLonLat([0, 0]),
-        zoom: 10,
+        center: initialCenter,
+        zoom: 18 // Zoom desejado para o mapa estático
       });
 
       map = new Map({
@@ -107,13 +112,16 @@ const Home = () => {
 
       map.addLayer(dangerousLocationLayer);
 
-      PACHECO_1.forEach((location) => {
-        const coordinates = fromLonLat([location.lon, location.lat]);
-        const feature = new Feature({
-          geometry: new Point(coordinates),
+      // Adicionar todas as localizações perigosas à fonte
+      Object.values(additionalLocations)
+        .flat()
+        .forEach((location) => {
+          const coordinates = fromLonLat([location.lon, location.lat]);
+          const feature = new Feature({
+            geometry: new Point(coordinates),
+          });
+          dangerousLocationSource.addFeature(feature);
         });
-        dangerousLocationSource.addFeature(feature);
-      });
 
       if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition(
@@ -122,23 +130,19 @@ const Home = () => {
             setCoordinates({ lat: latitude, lon: longitude });
 
             const coords = fromLonLat([longitude, latitude]);
-            view.setCenter(coords);
 
             const userLocationFeature = new Feature({
               geometry: new Point(coords),
             });
 
-            userLocationSource.clear(true); // Clear previous location
+            userLocationSource.clear(true); // Limpar localização anterior
             userLocationSource.addFeature(userLocationFeature);
 
-            const currentTime = Date.now();
+            // Verificar se o usuário está dentro de uma zona de perigo
             if (isInsideDangerZone(latitude, longitude)) {
               setIsInDangerZone(true);
               map.getViewport().style.backgroundColor = "rgba(255, 0, 0, 0.2)";
-              if (currentTime - lastNotificationTime > 5 * 60 * 1000) {
-                showNotification("Você está em uma área perigosa!");
-                setLastNotificationTime(currentTime);
-              }
+              showNotification("Você está em uma área perigosa!");
             } else {
               setIsInDangerZone(false);
               map.getViewport().style.backgroundColor = "transparent";
@@ -159,21 +163,24 @@ const Home = () => {
     };
 
     const isInsideDangerZone = (lat, lon) => {
-      return PACHECO_1.some((location) => {
-        const latDiff = Math.abs(location.lat - lat);
-        const lonDiff = Math.abs(location.lon - lon);
-        return latDiff < 0.0001 && lonDiff < 0.0001;
-      });
+      return Object.values(additionalLocations)
+        .flat()
+        .some((location) => {
+          const latDiff = Math.abs(location.lat - lat);
+          const lonDiff = Math.abs(location.lon - lon);
+          return latDiff < 0.0001 && lonDiff < 0.0001;
+        });
     };
 
     initMap();
 
     return () => {
       if (map) {
+        map.set;
         map.setTarget(null);
       }
     };
-  }, [lastNotificationTime]);
+  }, []);
 
   const showNotification = (message) => {
     if (Notification.permission === "granted") {
@@ -189,6 +196,13 @@ const Home = () => {
 
   const handleTestNotification = () => {
     showNotification("Esta é uma notificação de teste!");
+  };
+
+  const addLocation = (locationKey) => {
+    setDangerousLocations((prevLocations) => [
+      ...prevLocations,
+      ...additionalLocations[locationKey],
+    ]);
   };
 
   return (

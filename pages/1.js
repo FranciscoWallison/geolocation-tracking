@@ -13,22 +13,24 @@ import Feature from "ol/Feature";
 import Head from "next/head";
 import styles from "../styles/Geolocation.module.css";
 
-const PONTA_GROSSA_1 = [
-  { lat: -4.629986, lon: -37.507352 },
-  { lat: -4.629914, lon: -37.507271 },
-  { lat: -4.629829, lon: -37.507171 },
-  { lat: -4.629794, lon: -37.507108 },
-  { lat: -4.629744, lon: -37.507026 },
-  { lat: -4.629667, lon: -37.506921 },
-  { lat: -4.629589, lon: -37.506873 },
-];
+const additionalLocations = {
+  "Ponta Grossa - 1": [
+    { lat: -4.629986, lon: -37.507352 },
+    { lat: -4.629914, lon: -37.507271 },
+    { lat: -4.629829, lon: -37.507171 },
+    { lat: -4.629794, lon: -37.507108 },
+    { lat: -4.629744, lon: -37.507026 },
+    { lat: -4.629667, lon: -37.506921 },
+    { lat: -4.629589, lon: -37.506873 },
+  ],
+};
 
 const Home = () => {
   const mapElement = useRef();
   const [coordinates, setCoordinates] = useState({ lat: 0, lon: 0 });
   const [isInDangerZone, setIsInDangerZone] = useState(false);
   const [error, setError] = useState(null);
-  const [lastNotificationTime, setLastNotificationTime] = useState(0);
+  const [dangerousLocations, setDangerousLocations] = useState([]);
 
   useEffect(() => {
     let map;
@@ -39,9 +41,11 @@ const Home = () => {
     let dangerousLocationLayer;
 
     const initMap = () => {
+      const initialCenter = fromLonLat([-37.507108, -4.629794]); // Coordenadas desejadas
+
       view = new View({
-        center: fromLonLat([0, 0]),
-        zoom: 10,
+        center: initialCenter,
+        zoom: 19, // Zoom desejado para o mapa estático
       });
 
       map = new Map({
@@ -81,13 +85,16 @@ const Home = () => {
 
       map.addLayer(dangerousLocationLayer);
 
-      PONTA_GROSSA_1.forEach((location) => {
-        const coordinates = fromLonLat([location.lon, location.lat]);
-        const feature = new Feature({
-          geometry: new Point(coordinates),
+      // Adicionar todas as localizações perigosas à fonte
+      Object.values(additionalLocations)
+        .flat()
+        .forEach((location) => {
+          const coordinates = fromLonLat([location.lon, location.lat]);
+          const feature = new Feature({
+            geometry: new Point(coordinates),
+          });
+          dangerousLocationSource.addFeature(feature);
         });
-        dangerousLocationSource.addFeature(feature);
-      });
 
       if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition(
@@ -96,23 +103,19 @@ const Home = () => {
             setCoordinates({ lat: latitude, lon: longitude });
 
             const coords = fromLonLat([longitude, latitude]);
-            view.setCenter(coords);
 
             const userLocationFeature = new Feature({
               geometry: new Point(coords),
             });
 
-            userLocationSource.clear(true); // Clear previous location
+            userLocationSource.clear(true); // Limpar localização anterior
             userLocationSource.addFeature(userLocationFeature);
 
-            const currentTime = Date.now();
+            // Verificar se o usuário está dentro de uma zona de perigo
             if (isInsideDangerZone(latitude, longitude)) {
               setIsInDangerZone(true);
               map.getViewport().style.backgroundColor = "rgba(255, 0, 0, 0.2)";
-              if (currentTime - lastNotificationTime > 5 * 60 * 1000) {
-                showNotification("Você está em uma área perigosa!");
-                setLastNotificationTime(currentTime);
-              }
+              showNotification("Você está em uma área perigosa!");
             } else {
               setIsInDangerZone(false);
               map.getViewport().style.backgroundColor = "transparent";
@@ -133,21 +136,24 @@ const Home = () => {
     };
 
     const isInsideDangerZone = (lat, lon) => {
-      return PONTA_GROSSA_1.some((location) => {
-        const latDiff = Math.abs(location.lat - lat);
-        const lonDiff = Math.abs(location.lon - lon);
-        return latDiff < 0.0001 && lonDiff < 0.0001;
-      });
+      return Object.values(additionalLocations)
+        .flat()
+        .some((location) => {
+          const latDiff = Math.abs(location.lat - lat);
+          const lonDiff = Math.abs(location.lon - lon);
+          return latDiff < 0.0001 && lonDiff < 0.0001;
+        });
     };
 
     initMap();
 
     return () => {
       if (map) {
+        map.set;
         map.setTarget(null);
       }
     };
-  }, [lastNotificationTime]);
+  }, []);
 
   const showNotification = (message) => {
     if (Notification.permission === "granted") {
@@ -163,6 +169,13 @@ const Home = () => {
 
   const handleTestNotification = () => {
     showNotification("Esta é uma notificação de teste!");
+  };
+
+  const addLocation = (locationKey) => {
+    setDangerousLocations((prevLocations) => [
+      ...prevLocations,
+      ...additionalLocations[locationKey],
+    ]);
   };
 
   return (
