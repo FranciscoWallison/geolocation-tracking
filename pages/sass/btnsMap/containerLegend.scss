@@ -1,0 +1,99 @@
+
+
+.ContainerLegendMapWrapper{
+    position: relative;
+    right: 10px;
+    top: 400px;
+    width: 250px;
+    padding: 10px;
+    background-color: #1477b1cb;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+.containerInfoLegends{
+    display: flex;
+    gap: 10px;
+
+    p{
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: 'Roboto', sans-serif;
+      
+    }
+
+}
+
+.titleLegend{
+    color: white;
+    font-family: 'Roboto', sans-serif;
+}
+
+.divOne{   
+    width: 40px;
+    height: 20px;
+    background-color: rgb(240, 240, 101);
+    border-radius: 5px;
+}
+
+.divTwo{
+    border-radius: 5px;
+    width: 40px;
+    height: 20px;
+    background-color: rgb(240, 64, 52);
+}
+
+@media only screen and (max-width: 490px){
+
+    .ContainerLegendMapWrapper{
+        position: relative;
+        right: 10px;
+        top: 300px;
+        width: 130px;
+        padding: 10px;
+        background-color: #1477b1cb;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .containerInfoLegends{
+        display: flex;
+        gap: 10px;
+    
+        p{
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: 'Roboto', sans-serif;
+          
+        }
+    
+    }
+    
+    .titleLegend{
+        color: white;
+        font-family: 'Roboto', sans-serif;
+        font-size: 12px;
+    }
+    
+    .divOne{   
+        width: 40px;
+        height: 20px;
+        background-color: rgb(240, 240, 101);
+        border-radius: 5px;
+    }
+    
+    .divTwo{
+        border-radius: 5px;
+        width: 30px;
+        height: 20px;
+        background-color: rgb(240, 64, 52);
+    }
+
+}
